@@ -12,42 +12,45 @@ import {
 import { db } from './firebase.js';
 import { EventDocument, ChildDocument, UserDocument, EventType, COLLECTIONS } from './types.js';
 
-// Authentication service
+// Authentication service using Firebase Auth REST API
 export async function authenticateUser(email: string, password: string): Promise<UserDocument | null> {
   try {
-    // Note: Firebase Admin SDK doesn't have direct email/password auth
-    // You'll need to implement this through Firebase Auth REST API or client SDK
-    // For now, we'll simulate authentication
+    console.log(`🔐 Authenticating user: ${email}`);
     
-    // In production, you would:
-    // 1. Use Firebase Auth REST API to verify credentials
-    // 2. Get the user's Firebase UID
-    // 3. Fetch user document from Firestore
+    // Use Firebase Auth REST API to verify credentials
+    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.FIREBASE_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password,
+        returnSecureToken: true
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.log(`❌ Authentication failed: ${errorData.error?.message || 'Unknown error'}`);
+      return null;
+    }
+
+    const authData = await response.json();
+    const firebaseUid = authData.localId;
     
-    console.log(`Authenticating user: ${email}`);
+    console.log(`✅ User authenticated: ${firebaseUid}`);
     
-    // Simulate finding user by email
-    const usersRef = collection(db, COLLECTIONS.USERS);
-    const q = query(usersRef, where('email', '==', email), where('isDeleted', '==', false));
-    const querySnapshot = await getDocs(q);
-    
-    if (querySnapshot.empty) {
-      return null; // User not found
+    // Get user document from Firestore using Firebase UID
+    const userDoc = await FirebaseEventService.getUserById(firebaseUid);
+    if (!userDoc) {
+      console.log(`❌ User document not found for UID: ${firebaseUid}`);
+      return null;
     }
     
-    const userDoc = querySnapshot.docs[0];
-    const userData = userDoc.data() as UserDocument;
-    
-    // In production, verify password hash here
-    // For now, we'll accept any password for demo
-    console.log(`User authenticated: ${userData.displayName}`);
-    
-    return {
-      ...userData,
-      id: userDoc.id
-    };
+    return userDoc;
   } catch (error) {
-    console.error('Authentication error:', error);
+    console.error('❌ Authentication error:', error);
     return null;
   }
 }

@@ -1,3 +1,4 @@
+import { config } from 'dotenv';
 import {
   createServer,
   type IncomingMessage,
@@ -6,6 +7,9 @@ import {
 import fs from "node:fs";
 import path from "node:path";
 import { URL, fileURLToPath } from "node:url";
+
+// Load environment variables
+config();
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";

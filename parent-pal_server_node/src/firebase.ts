@@ -12,13 +12,24 @@ const firebaseConfig = {
 // Initialize Firebase Admin SDK
 let app;
 if (getApps().length === 0) {
-  app = initializeApp({
-    projectId: firebaseConfig.projectId,
-    storageBucket: firebaseConfig.storageBucket,
-    databaseURL: firebaseConfig.databaseURL,
-    // Note: In production, you should use service account key
-    // credential: cert(serviceAccountKey)
-  });
+  try {
+    // Try to load service account key
+    const serviceAccountKey = require('./serviceAccountKey.json');
+    app = initializeApp({
+      projectId: firebaseConfig.projectId,
+      storageBucket: firebaseConfig.storageBucket,
+      databaseURL: firebaseConfig.databaseURL,
+      credential: cert(serviceAccountKey)
+    });
+    console.log('✅ Firebase initialized with service account key');
+  } catch (error) {
+    console.log('⚠️  Service account key not found, using default credentials');
+    app = initializeApp({
+      projectId: firebaseConfig.projectId,
+      storageBucket: firebaseConfig.storageBucket,
+      databaseURL: firebaseConfig.databaseURL,
+    });
+  }
 } else {
   app = getApps()[0];
 }
