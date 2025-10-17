@@ -415,22 +415,28 @@ const ssePath = "/mcp";
 const postPath = "/mcp/messages";
 
 async function handleSSERequest(req: IncomingMessage, res: ServerResponse) {
-  // Don't set headers here - let SSEServerTransport handle them
-  const transport = new SSEServerTransport(postPath, res);
-  const sessionId = transport.sessionId;
-
-  const server = createParentPalServer();
-  sessions.set(sessionId, { server, transport });
-
-  transport.onclose = async () => {
-    sessions.delete(sessionId);
-  };
-
-  transport.onerror = (error) => {
-    console.error("SSE transport error", error);
-  };
+  // Check if headers are already sent
+  if (res.headersSent) {
+    console.error("Headers already sent, cannot create SSE transport");
+    return;
+  }
 
   try {
+    // Don't set headers here - let SSEServerTransport handle them
+    const transport = new SSEServerTransport(postPath, res);
+    const sessionId = transport.sessionId;
+
+    const server = createParentPalServer();
+    sessions.set(sessionId, { server, transport });
+
+    transport.onclose = async () => {
+      sessions.delete(sessionId);
+    };
+
+    transport.onerror = (error) => {
+      console.error("SSE transport error", error);
+    };
+
     await server.connect(transport);
   } catch (error) {
     console.error("Failed to connect server to transport", error);
@@ -472,12 +478,11 @@ const httpServer = createServer(async (req, res) => {
 
     const url = new URL(req.url, `http://${req.headers.host ?? "localhost"}`);
 
-    // CORS headers
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-
     if (req.method === "OPTIONS") {
+      // CORS headers for OPTIONS
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
       res.writeHead(200);
       res.end();
       return;
@@ -485,11 +490,23 @@ const httpServer = createServer(async (req, res) => {
 
     if (req.method === "GET" && url.pathname === ssePath) {
       // Let SSEServerTransport handle the headers
-      await handleSSERequest(req, res);
+      try {
+        await handleSSERequest(req, res);
+      } catch (error) {
+        console.error("SSE request error:", error);
+        if (!res.headersSent) {
+          res.writeHead(500);
+          res.end();
+        }
+      }
       return;
     }
 
     if (req.method === "POST" && url.pathname === postPath) {
+      // CORS headers for POST
+      res.setHeader("Access-Control-Allow-Origin", "*");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
       await handlePostRequest(req, res);
       return;
     }

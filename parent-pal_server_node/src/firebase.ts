@@ -1,6 +1,7 @@
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
+import { readFileSync } from 'fs';
 
 // Firebase configuration from parent-pal-fixed
 const firebaseConfig = {
@@ -13,8 +14,8 @@ const firebaseConfig = {
 let app;
 if (getApps().length === 0) {
   try {
-    // Try to load service account key
-    const serviceAccountKey = require('./serviceAccountKey.json');
+    // Try to load service account key using ES modules
+    const serviceAccountKey = JSON.parse(readFileSync('./src/serviceAccountKey.json', 'utf8'));
     app = initializeApp({
       projectId: firebaseConfig.projectId,
       storageBucket: firebaseConfig.storageBucket,
@@ -24,6 +25,7 @@ if (getApps().length === 0) {
     console.log('✅ Firebase initialized with service account key');
   } catch (error) {
     console.log('⚠️  Service account key not found, using default credentials');
+    console.log('Error details:', error.message);
     app = initializeApp({
       projectId: firebaseConfig.projectId,
       storageBucket: firebaseConfig.storageBucket,
