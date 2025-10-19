@@ -22,10 +22,8 @@ if (getApps().length === 0) {
       databaseURL: firebaseConfig.databaseURL,
       credential: cert(serviceAccountKey)
     });
-    console.log('✅ Firebase initialized with service account key');
   } catch (error) {
-    console.log('⚠️  Service account key not found, using default credentials');
-    console.log('Error details:', error.message);
+    // Silently fall back to default credentials
     app = initializeApp({
       projectId: firebaseConfig.projectId,
       storageBucket: firebaseConfig.storageBucket,

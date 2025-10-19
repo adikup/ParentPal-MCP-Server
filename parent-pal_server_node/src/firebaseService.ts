@@ -5,7 +5,7 @@ import { EventDocument, ChildDocument, UserDocument, EventType, COLLECTIONS } fr
 // Authentication service using Firebase Auth REST API
 export async function authenticateUser(email: string, password: string): Promise<UserDocument | null> {
   try {
-    console.log(`🔐 Authenticating user: ${email}`);
+    process.stderr.write(`🔐 Authenticating user: ${email}\n`);
     
     // Use Firebase Auth REST API to verify credentials
     const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${process.env.FIREBASE_API_KEY}`, {
@@ -22,14 +22,14 @@ export async function authenticateUser(email: string, password: string): Promise
 
     if (!response.ok) {
       const errorData = await response.json();
-      console.log(`❌ Authentication failed: ${errorData.error?.message || 'Unknown error'}`);
+      process.stderr.write(`❌ Authentication failed: ${errorData.error?.message || 'Unknown error'}\n`);
       return null;
     }
 
     const authData = await response.json();
     const firebaseUid = authData.localId;
     
-    console.log(`✅ User authenticated: ${firebaseUid}`);
+    process.stderr.write(`✅ User authenticated: ${firebaseUid}\n`);
     
     // Return user data from Firebase Auth (no need for Firestore user document)
     return {
@@ -48,7 +48,7 @@ export async function authenticateUser(email: string, password: string): Promise
       isDeleted: false
     };
   } catch (error) {
-    console.error('❌ Authentication error:', error);
+    process.stderr.write(`❌ Authentication error: ${error}\n`);
     return null;
   }
 }
@@ -72,7 +72,7 @@ export class FirebaseEventService {
         id: doc.id
       }));
     } catch (error) {
-      console.error('Error fetching events by category:', error);
+      process.stderr.write(`Error fetching events by category: ${error}\n`);
       return [];
     }
   }
@@ -93,7 +93,7 @@ export class FirebaseEventService {
         id: doc.id
       }));
     } catch (error) {
-      console.error('Error fetching events by child:', error);
+      process.stderr.write(`Error fetching events by child: ${error}\n`);
       return [];
     }
   }
@@ -118,7 +118,7 @@ export class FirebaseEventService {
         id: doc.id
       }));
     } catch (error) {
-      console.error('Error fetching nearest events:', error);
+      process.stderr.write(`Error fetching nearest events: ${error}\n`);
       return [];
     }
   }
@@ -143,7 +143,7 @@ export class FirebaseEventService {
         id: childSnap.id
       };
     } catch (error) {
-      console.error('Error fetching child:', error);
+      process.stderr.write(`Error fetching child: ${error}\n`);
       return null;
     }
   }
@@ -168,7 +168,7 @@ export class FirebaseEventService {
         id: userSnap.id
       };
     } catch (error) {
-      console.error('Error fetching user:', error);
+      process.stderr.write(`Error fetching user: ${error}\n`);
       return null;
     }
   }
@@ -188,7 +188,7 @@ export class FirebaseEventService {
         id: doc.id
       }));
     } catch (error) {
-      console.error('Error fetching user children:', error);
+      process.stderr.write(`Error fetching user children: ${error}\n`);
       return [];
     }
   }

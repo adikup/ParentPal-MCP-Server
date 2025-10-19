@@ -216,28 +216,28 @@ const fetchNearestEventsSchema = {
 const tools: Tool[] = [
   {
     name: "authenticate-user",
-    description: "Authenticate user with email and password to access their events",
+    description: "Authenticate user with email and password to access their Carri family events and children data. Use this first to establish user session.",
     inputSchema: authenticateUserSchema,
     title: "Authenticate User",
     _meta: widgetMeta(widgets[0]),
   },
   {
     name: "fetch-events-by-category",
-    description: "Fetch events filtered by category (birthday, health, education, etc.)",
+    description: "Fetch Carri family events by category. Categories include: birthday, health (doctor visits, vaccinations), education (school events), holiday, baby_photo, photo, birthday_wish, wish, birthday_prep, prep, school_pickup, after_school, financial_benefits, field_trip, school_vacation, school_show, parent_meeting, homework, registration_deadline. Perfect for finding specific types of events like 'health events' or 'birthday events'.",
     inputSchema: fetchEventsByCategorySchema,
     title: "Fetch Events by Category",
     _meta: widgetMeta(widgets[1]),
   },
   {
     name: "fetch-events-by-child",
-    description: "Fetch events for a specific child",
+    description: "Fetch Carri events for a specific child. Use this when user asks about events for a particular child by name or when you need child-specific information.",
     inputSchema: fetchEventsByChildSchema,
     title: "Fetch Events by Child",
     _meta: widgetMeta(widgets[2]),
   },
   {
     name: "fetch-nearest-events",
-    description: "Fetch upcoming events within specified number of days",
+    description: "Fetch upcoming Carri events within specified number of days. Perfect for questions like 'what events do I have this week/month' or 'what's coming up soon'. Returns events with dates, titles, descriptions, and event types.",
     inputSchema: fetchNearestEventsSchema,
     title: "Fetch Nearest Events",
     _meta: widgetMeta(widgets[3]),
@@ -353,6 +353,8 @@ function createParentPalServer(): Server {
           // Use real Firebase data instead of mock data
           events = await FirebaseEventService.getEventsByCategory(args.category as EventType, args.userId);
           user = await FirebaseEventService.getUserById(args.userId);
+          // Get children info for context
+          const children = await FirebaseEventService.getUserChildren(args.userId);
           break;
         }
         case "fetch-events-by-child": {
@@ -376,6 +378,8 @@ function createParentPalServer(): Server {
           // Use real Firebase data instead of mock data
           events = await FirebaseEventService.getNearestEvents(args.days, args.userId);
           user = await FirebaseEventService.getUserById(args.userId);
+          // Get children info for context
+          const children = await FirebaseEventService.getUserChildren(args.userId);
           break;
         }
         default:
@@ -392,6 +396,7 @@ function createParentPalServer(): Server {
         structuredContent: {
           events,
           child,
+          children: children || [],
           user,
           authenticatedUser,
           toolName: request.params.name,
@@ -417,7 +422,7 @@ const postPath = "/mcp/messages";
 async function handleSSERequest(req: IncomingMessage, res: ServerResponse) {
   // Check if headers are already sent
   if (res.headersSent) {
-    console.error("Headers already sent, cannot create SSE transport");
+    process.stderr.write("Headers already sent, cannot create SSE transport\n");
     return;
   }
 
@@ -434,12 +439,12 @@ async function handleSSERequest(req: IncomingMessage, res: ServerResponse) {
     };
 
     transport.onerror = (error) => {
-      console.error("SSE transport error", error);
+      process.stderr.write(`SSE transport error: ${error}\n`);
     };
 
     await server.connect(transport);
   } catch (error) {
-    console.error("Failed to connect server to transport", error);
+    process.stderr.write(`Failed to connect server to transport: ${error}\n`);
     if (!res.headersSent) {
       res.writeHead(500);
       res.end();
@@ -465,8 +470,8 @@ async function handlePostRequest(req: IncomingMessage, res: ServerResponse) {
   await session.transport.handlePostMessage(req, res);
 }
 
-const portEnv = Number(process.env.PORT ?? 8001);
-const port = Number.isFinite(portEnv) ? portEnv : 8001;
+const portEnv = Number(process.env.PORT ?? 8000);
+const port = Number.isFinite(portEnv) ? portEnv : 8000;
 
 const httpServer = createServer(async (req, res) => {
   try {
@@ -493,7 +498,7 @@ const httpServer = createServer(async (req, res) => {
       try {
         await handleSSERequest(req, res);
       } catch (error) {
-        console.error("SSE request error:", error);
+        process.stderr.write(`SSE request error: ${error}\n`);
         if (!res.headersSent) {
           res.writeHead(500);
           res.end();
@@ -516,7 +521,7 @@ const httpServer = createServer(async (req, res) => {
       res.end("Not Found");
     }
   } catch (error) {
-    console.error("Request handling error", error);
+    process.stderr.write(`Request handling error: ${error}\n`);
     if (!res.headersSent) {
       res.writeHead(500);
       res.end();
@@ -525,9 +530,9 @@ const httpServer = createServer(async (req, res) => {
 });
 
 httpServer.listen(port, () => {
-  console.log(`Parent Pal MCP server listening on http://localhost:${port}`);
-  console.log(`  SSE stream: GET http://localhost:${port}${ssePath}`);
-  console.log(
-    `  Message post endpoint: POST http://localhost:${port}${postPath}?sessionId=...`
+  process.stderr.write(`Carri MCP server listening on http://localhost:${port}\n`);
+  process.stderr.write(`  SSE stream: GET http://localhost:${port}${ssePath}\n`);
+  process.stderr.write(
+    `  Message post endpoint: POST http://localhost:${port}${postPath}?sessionId=...\n`
   );
 });

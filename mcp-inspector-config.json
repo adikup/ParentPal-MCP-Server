@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "carri": {
+      "command": "npx",
+      "args": ["tsx", "/Users/adigoffer/CursorProject/ParentPal-MCP-Server/parent-pal_server_node/src/server.ts"],
+      "env": {
+        "FIREBASE_API_KEY": "AIzaSyAWsZzPo4uvUyzgsu-Phq64yHeRRDtTczE"
+      }
+    }
+  }
+}

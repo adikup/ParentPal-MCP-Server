@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carri MCP Server Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        input, select {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 3px;
+            padding: 10px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { border-color: #28a745; background: #d4edda; }
+        .error { border-color: #dc3545; background: #f8d7da; }
+        .info { border-color: #17a2b8; background: #d1ecf1; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Carri MCP Server Test Interface</h1>
+        <p>Test your Carri MCP server directly in the browser.</p>
+    </div>
+
+    <div class="container test-section">
+        <h3>1️⃣ Server Connection Test</h3>
+        <button onclick="testConnection()">Test Server Connection</button>
+        <div id="connectionResult" class="result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h3>2️⃣ MCP Initialization</h3>
+        <button onclick="testInitialization()">Initialize MCP</button>
+        <div id="initResult" class="result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h3>3️⃣ List Available Tools</h3>
+        <button onclick="listTools()">List Tools</button>
+        <div id="toolsResult" class="result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h3>4️⃣ Test Authentication</h3>
+        <input type="email" id="email" placeholder="Email" value="adi+testii33@gmail.com">
+        <input type="password" id="password" placeholder="Password" value="Neo123456!">
+        <button onclick="testAuthentication()">Authenticate User</button>
+        <div id="authResult" class="result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h3>5️⃣ Test Event Fetching</h3>
+        <input type="number" id="days" placeholder="Days" value="60">
+        <input type="text" id="userId" placeholder="User ID" value="ambLSTXQYiZNaWYSB6GKR06UyDw1">
+        <button onclick="testFetchEvents()">Fetch Nearest Events</button>
+        <div id="eventsResult" class="result"></div>
+    </div>
+
+    <div class="container test-section">
+        <h3>6️⃣ Test Events by Category</h3>
+        <select id="category">
+            <option value="health">Health</option>
+            <option value="birthday">Birthday</option>
+            <option value="education">Education</option>
+            <option value="holiday">Holiday</option>
+        </select>
+        <input type="text" id="categoryUserId" placeholder="User ID" value="ambLSTXQYiZNaWYSB6GKR06UyDw1">
+        <button onclick="testFetchByCategory()">Fetch Events by Category</button>
+        <div id="categoryResult" class="result"></div>
+    </div>
+
+    <script>
+        const MCP_SERVER_URL = 'http://localhost:8001';
+        const MCP_POST_PATH = '/mcp/messages';
+        let sessionId = 'test-session-' + Date.now();
+
+        function showResult(elementId, content, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = content;
+            element.className = `result ${type}`;
+        }
+
+        async function makeMCPRequest(method, params = {}) {
+            const message = {
+                jsonrpc: "2.0",
+                id: Date.now(),
+                method: method,
+                params: params
+            };
+
+            try {
+                const response = await fetch(`${MCP_SERVER_URL}${MCP_POST_PATH}?sessionId=${sessionId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(message)
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const data = await response.text();
+                return { success: true, data: data };
+            } catch (error) {
+                return { success: false, error: error.message };
+            }
+        }
+
+        async function testConnection() {
+            showResult('connectionResult', 'Testing connection...', 'info');
+            
+            try {
+                const response = await fetch(`${MCP_SERVER_URL}/mcp`);
+                if (response.ok) {
+                    showResult('connectionResult', '✅ MCP server is running and accessible!', 'success');
+                } else {
+                    showResult('connectionResult', `❌ Server responded with status: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult('connectionResult', `❌ Cannot connect to MCP server: ${error.message}`, 'error');
+            }
+        }
+
+        async function testInitialization() {
+            showResult('initResult', 'Initializing MCP...', 'info');
+            
+            const result = await makeMCPRequest('initialize', {
+                protocolVersion: "2024-11-05",
+                capabilities: { tools: {} },
+                clientInfo: { name: "carri-test-client", version: "1.0.0" }
+            });
+
+            if (result.success) {
+                showResult('initResult', `✅ MCP initialization successful!\n\nResponse:\n${result.data}`, 'success');
+            } else {
+                showResult('initResult', `❌ MCP initialization failed: ${result.error}`, 'error');
+            }
+        }
+
+        async function listTools() {
+            showResult('toolsResult', 'Fetching tools list...', 'info');
+            
+            const result = await makeMCPRequest('tools/list', {});
+            
+            if (result.success) {
+                showResult('toolsResult', `✅ Tools listed successfully!\n\nResponse:\n${result.data}`, 'success');
+            } else {
+                showResult('toolsResult', `❌ Failed to list tools: ${result.error}`, 'error');
+            }
+        }
+
+        async function testAuthentication() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            showResult('authResult', 'Authenticating user...', 'info');
+            
+            const result = await makeMCPRequest('tools/call', {
+                name: 'authenticate-user',
+                arguments: { email: email, password: password }
+            });
+
+            if (result.success) {
+                showResult('authResult', `✅ Authentication successful!\n\nResponse:\n${result.data}`, 'success');
+            } else {
+                showResult('authResult', `❌ Authentication failed: ${result.error}`, 'error');
+            }
+        }
+
+        async function testFetchEvents() {
+            const days = parseInt(document.getElementById('days').value);
+            const userId = document.getElementById('userId').value;
+            
+            showResult('eventsResult', 'Fetching nearest events...', 'info');
+            
+            const result = await makeMCPRequest('tools/call', {
+                name: 'fetch-nearest-events',
+                arguments: { days: days, userId: userId }
+            });
+
+            if (result.success) {
+                showResult('eventsResult', `✅ Events fetched successfully!\n\nResponse:\n${result.data}`, 'success');
+            } else {
+                showResult('eventsResult', `❌ Failed to fetch events: ${result.error}`, 'error');
+            }
+        }
+
+        async function testFetchByCategory() {
+            const category = document.getElementById('category').value;
+            const userId = document.getElementById('categoryUserId').value;
+            
+            showResult('categoryResult', `Fetching ${category} events...`, 'info');
+            
+            const result = await makeMCPRequest('tools/call', {
+                name: 'fetch-events-by-category',
+                arguments: { category: category, userId: userId }
+            });
+
+            if (result.success) {
+                showResult('categoryResult', `✅ ${category} events fetched successfully!\n\nResponse:\n${result.data}`, 'success');
+            } else {
+                showResult('categoryResult', `❌ Failed to fetch ${category} events: ${result.error}`, 'error');
+            }
+        }
+
+        // Auto-test connection on page load
+        window.onload = function() {
+            testConnection();
+        };
+    </script>
+</body>
+</html>
