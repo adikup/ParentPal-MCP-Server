@@ -8,7 +8,10 @@
     "start": "tsx src/server-stdio.ts",
     "start:http": "tsx src/server.ts",
     "build": "echo 'No build step required for tsx'",
-    "dev": "tsx src/server-stdio.ts"
+    "dev": "tsx src/server-stdio.ts",
+    "setup:test": "tsx src/setupTestData.ts populate",
+    "cleanup:test": "tsx src/setupTestData.ts cleanup",
+    "test:mcp": "echo 'Testing MCP server with test account...' && echo 'Use test@carri.app / TestPassword123!'"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",

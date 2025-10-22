@@ -266,38 +266,53 @@ const createEventSchema = {
 const tools: Tool[] = [
   {
     name: "authenticate-user",
-    description: "Authenticate user with email and password to access their Carri family events and children data. Use this first to establish user session.",
+    description: "Authenticate user with email and password to access their Carri family events and children data.",
     inputSchema: authenticateUserSchema,
     title: "Authenticate User",
-    _meta: widgetMeta(widgets[0]),
+    _meta: {
+      ...widgetMeta(widgets[0]),
+      _readOnlyHint_: "This tool only authenticates users and does not modify any data"
+    },
   },
   {
     name: "fetch-events-by-category",
-    description: "Fetch Carri family events by category. Categories include: birthday, health (doctor visits, vaccinations), education (school events), holiday, baby_photo, photo, birthday_wish, wish, birthday_prep, prep, school_pickup, after_school, financial_benefits, field_trip, school_vacation, school_show, parent_meeting, homework, registration_deadline. Perfect for finding specific types of events like 'health events' or 'birthday events'.",
+    description: "Fetch family events filtered by category (birthday, health, education, etc.).",
     inputSchema: fetchEventsByCategorySchema,
     title: "Fetch Events by Category",
-    _meta: widgetMeta(widgets[1]),
+    _meta: {
+      ...widgetMeta(widgets[1]),
+      _readOnlyHint_: "This tool only reads and displays events, it does not modify any data"
+    },
   },
   {
     name: "fetch-events-by-child",
-    description: "Fetch Carri events for a specific child. Use this when user asks about events for a particular child by name or when you need child-specific information.",
+    description: "Fetch events for a specific child.",
     inputSchema: fetchEventsByChildSchema,
     title: "Fetch Events by Child",
-    _meta: widgetMeta(widgets[2]),
+    _meta: {
+      ...widgetMeta(widgets[2]),
+      _readOnlyHint_: "This tool only reads and displays events, it does not modify any data"
+    },
   },
   {
     name: "fetch-nearest-events",
-    description: "Fetch upcoming Carri events within specified number of days. Perfect for questions like 'what events do I have this week/month' or 'what's coming up soon'. Returns events with dates, titles, descriptions, and event types.",
+    description: "Fetch upcoming events within specified number of days.",
     inputSchema: fetchNearestEventsSchema,
     title: "Fetch Nearest Events",
-    _meta: widgetMeta(widgets[3]),
+    _meta: {
+      ...widgetMeta(widgets[3]),
+      _readOnlyHint_: "This tool only reads and displays events, it does not modify any data"
+    },
   },
   {
     name: "create-event",
-    description: "Create a new Carri event. Use this when user wants to add a new event to their calendar. Supports all event types including birthdays, appointments, school events, etc. Can optionally sync to Google Calendar if user is connected.",
+    description: "Create a new family event with title, date, and type.",
     inputSchema: createEventSchema,
     title: "Create Event",
-    _meta: widgetMeta(widgets[4]),
+    _meta: {
+      ...widgetMeta(widgets[4]),
+      _destructiveHint_: "This tool creates new events in your calendar and may sync to Google Calendar"
+    },
   },
 ];
 
