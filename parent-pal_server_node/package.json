@@ -1,13 +1,14 @@
 {
-  "name": "parent-pal-mcp-node",
+  "name": "carri-mcp-node",
   "version": "0.1.0",
   "type": "module",
   "private": true,
-  "description": "Parent Pal MCP server that exposes event management tools using the official TypeScript SDK.",
+  "description": "Carri MCP server that exposes event management tools using the official TypeScript SDK.",
   "scripts": {
-    "start": "tsx src/server.ts",
+    "start": "tsx src/server-stdio.ts",
+    "start:http": "tsx src/server.ts",
     "build": "echo 'No build step required for tsx'",
-    "dev": "tsx src/server.ts"
+    "dev": "tsx src/server-stdio.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.5.0",
