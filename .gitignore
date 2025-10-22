@@ -62,6 +62,7 @@ Thumbs.db
 
 # Service account keys (keep local, don't deploy)
 src/serviceAccountKey.json
+parent-pal_server_node/src/serviceAccountKey.json
 
 # Railway specific
 .railway/
